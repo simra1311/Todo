@@ -11,11 +11,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/titleedit"
+        android:inputType="textCapWords"
         android:textSize="32dp"
         android:gravity="center"/>
+
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:inputType="textCapSentences"
         android:id="@+id/content"/>
 
     <Button
