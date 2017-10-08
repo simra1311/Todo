@@ -15,7 +15,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
@@ -119,10 +118,9 @@ public class MainActivity extends AppCompatActivity {
             String title = cursor.getString(cursor.getColumnIndex(Contract.TODO_TITLE));
             String note = cursor.getString(cursor.getColumnIndex(Contract.TODO_CONTENT));
             long date = cursor.getLong(cursor.getColumnIndex(Contract.TODO_DATE));
-            int hr = cursor.getInt(cursor.getColumnIndex(Contract.HOUR));
-            int min = cursor.getInt(cursor.getColumnIndex(Contract.MINUTE));
+
             long id = cursor.getLong(cursor.getColumnIndex(Contract.TODO_ID));
-            Todo todo = new Todo(id, title,note,date,hr,min);
+            Todo todo = new Todo(id, title,note,date);
             list.add(todo);
         }
         cursor.close();
@@ -149,25 +147,13 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    public void sendBroadcast(){
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
-        Intent alarmIntent = new Intent(this,AlarmReceiver.class);
-
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,1,alarmIntent,0);
-
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME,
-                SystemClock.elapsedRealtime() + 10*1000,
-                pendingIntent);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu,menu);
         return  true;
     }
-
-    int hh,mm;
 
     public boolean onOptionsItemSelected(MenuItem item){
         int id = item.getItemId();
@@ -183,21 +169,23 @@ public class MainActivity extends AppCompatActivity {
             final long[] epoch = new long[1];
             final Button button = view.findViewById(R.id.date);
             Button button1 = view.findViewById(R.id.time);
+            Button set = view.findViewById(R.id.alarm);
             Calendar c = Calendar.getInstance();
             final int mYear = c.get(Calendar.YEAR);
             final int mMonth = c.get(Calendar.MONTH);
             final int mDay = c.get(Calendar.DAY_OF_MONTH);
             final int mhour = c.get(Calendar.HOUR_OF_DAY);
             final int min = c.get(Calendar.MINUTE);
+            final Calendar calendar = Calendar.getInstance();
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     DatePickerDialog datePickerDialog = new DatePickerDialog(MainActivity.this, new DatePickerDialog.OnDateSetListener() {
                         @Override
                         public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
-                            Calendar calendar = Calendar.getInstance();
+
                             calendar.set(i,i1,i2,0,0,0);
-                            epoch[0] = calendar.getTimeInMillis();
+
                         }
                     },mYear,mMonth,mDay);
                     datePickerDialog.show();
@@ -211,18 +199,22 @@ public class MainActivity extends AppCompatActivity {
                     TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener(){
                         @Override
                         public void onTimeSet(TimePicker timePicker, int i, int i1) {
-                            Calendar calendar = Calendar.getInstance();
                             calendar.set(Calendar.HOUR_OF_DAY,i);
                             calendar.set(Calendar.MINUTE,i1);
-//                            timePicker.setHour(i);
-//                            timePicker.setMinute(i1);
-                            hh = calendar.get(Calendar.HOUR_OF_DAY);
-                            mm = calendar.get(Calendar.MINUTE);
+                            epoch[0] = calendar.getTimeInMillis();
                         }
                     },mhour,min,false);
                     timePickerDialog.show();
                 }
             });
+
+            set.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    sendBroadcast(title.getEditableText().toString(),epoch[0]);
+                }
+            });
+
 
             dialogue_textview.setText("Add a new note?");
             builder.setView(view);
@@ -235,14 +227,11 @@ public class MainActivity extends AppCompatActivity {
                     contentValues.put(Contract.TODO_TITLE,title.getEditableText().toString());
                     contentValues.put(Contract.TODO_CONTENT,note.getEditableText().toString());
                     contentValues.put(Contract.TODO_DATE,epoch[0]);
-                    contentValues.put(Contract.HOUR,mhour);
-                    contentValues.put(Contract.MINUTE,min);
                     long id = sqLiteDatabase.insert(Contract.TODO_TABLE_NAME,null,contentValues);
 
-                    Todo todo = new Todo(id, title.getEditableText().toString(),note.getEditableText().toString(),epoch[0],hh,mm);
+                    Todo todo = new Todo(id, title.getEditableText().toString(),note.getEditableText().toString(),epoch[0]);
                     list.add(todo);
                     adapter.notifyDataSetChanged();
-                    sendBroadcast();
                 }
             });
             builder.setNegativeButton("Cancel",null);
@@ -300,4 +289,18 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        }
 //    }
+
+    public void sendBroadcast(String s, long l){
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
+        Intent alarmIntent = new Intent(this,AlarmReceiver.class);
+        alarmIntent.putExtra("title", s);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,1,alarmIntent,0);
+
+        Toast.makeText(MainActivity.this , "Alarm set", Toast.LENGTH_SHORT).show();
+        alarmManager.set(AlarmManager.RTC,
+                l,
+                pendingIntent);
+    }
 }

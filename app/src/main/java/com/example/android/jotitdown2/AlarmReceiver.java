@@ -24,12 +24,15 @@ public class AlarmReceiver extends BroadcastReceiver{
         builder.setContentText("Hello");
 
         Intent intent1 = new Intent(context,MainActivity.class);
+        String title = intent1.getStringExtra("title");
+        String content = intent1.getStringExtra("content");
 
         PendingIntent pendingIntent = PendingIntent.getActivity(context,2,intent1,0);
 
         builder.setAutoCancel(true);
+        builder.setContentTitle(title);
         builder.setContentIntent(pendingIntent);
-
+        builder.setSmallIcon(R.drawable.preview);
 
         if(Build.VERSION.SDK_INT >= 26){
 

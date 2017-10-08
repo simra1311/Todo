@@ -11,15 +11,13 @@ public class Todo implements Serializable {
     private String title;
     private String note;
     private long epoch;
-    private int hour,minute;
 
-    public Todo(Long id, String title, String note,long epoch,int hr,int min) {
+    public Todo(Long id, String title, String note,long epoch) {
         this.id = id;
         this.title = title;
         this.note = note;
         this.epoch = epoch;
-        this.hour = hr;
-        this.minute = min;
+
     }
 
     public String getTitle() {
@@ -54,19 +52,4 @@ public class Todo implements Serializable {
         this.epoch = epoch;
     }
 
-    public int getHour() {
-        return hour;
-    }
-
-    public void setHour(int hour) {
-        this.hour = hour;
-    }
-
-    public int getMinute() {
-        return minute;
-    }
-
-    public void setMinute(int minute) {
-        this.minute = minute;
-    }
 }

@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.TextView;
 
 import java.text.DateFormat;
@@ -60,12 +59,11 @@ public class CustomAdapter extends ArrayAdapter<Todo> {
         holder.title.setText(todo.getTitle());
         holder.content.setText(todo.getNote());
         long epoch = todo.getEpoch();
-        int hr = todo.getHour();
-        int min = todo.getMinute();
-        holder.time.setText(hr + " : " + min +"");
+
+//        holder.time.setText(hr + " : " + min +"");
 
         Date date = new Date(epoch);
-        DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm aaa");
         format.setTimeZone(TimeZone.getTimeZone("India"));
         String formatted = format.format(date);
 
@@ -80,6 +78,5 @@ public class CustomAdapter extends ArrayAdapter<Todo> {
         TextView content;
         TextView date;
         TextView time;
-        Button button;
     }
 }

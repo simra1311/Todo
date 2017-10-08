@@ -1,6 +1,8 @@
 package com.example.android.jotitdown2;
 
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -17,6 +19,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import java.util.Calendar;
 
@@ -28,8 +31,9 @@ public class DetailActivity extends AppCompatActivity {
     Button time;
     Button button;
     Intent intent;
-     long[] epoch = new long[1];
-    int hr,mm;
+    Button start;
+    Button stop;
+    long[] epoch = new long[1];
     Todo todo;
     ExpenseOpenHelper openHelper;
     @Override
@@ -41,6 +45,8 @@ public class DetailActivity extends AppCompatActivity {
         content = (EditText)findViewById(R.id.content);
         date = (Button)findViewById(R.id.date);
         time = (Button)findViewById(R.id.time);
+        start = (Button)findViewById(R.id.alarm);
+        stop = (Button)findViewById(R.id.stop);
 
         intent = getIntent();
         todo = (Todo)intent.getSerializableExtra("Todo");
@@ -48,8 +54,7 @@ public class DetailActivity extends AppCompatActivity {
         title.setText(todo.getTitle());
         content.setText(todo.getNote());
          epoch[0] = todo.getEpoch();
-         hr = todo.getHour();
-         mm = todo.getMinute();
+
 
         Calendar c = Calendar.getInstance();
         final int mYear = c.get(Calendar.YEAR);
@@ -58,13 +63,14 @@ public class DetailActivity extends AppCompatActivity {
         final int mhour = c.get(Calendar.HOUR_OF_DAY);
         final int min = c.get(Calendar.MINUTE);
 
+        final Calendar calendar = Calendar.getInstance();;
+
         date.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 DatePickerDialog datePickerDialog = new DatePickerDialog(DetailActivity.this, new DatePickerDialog.OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
-                        Calendar calendar = Calendar.getInstance();
                         calendar.set(i,i1,i2,0,0,0);
                         epoch[0] = calendar.getTimeInMillis();
                     }
@@ -79,16 +85,31 @@ public class DetailActivity extends AppCompatActivity {
                 TimePickerDialog timePickerDialog = new TimePickerDialog(DetailActivity.this, new TimePickerDialog.OnTimeSetListener(){
                     @Override
                     public void onTimeSet(TimePicker timePicker, int i, int i1) {
-                        Calendar calendar = Calendar.getInstance();
                         calendar.set(Calendar.HOUR_OF_DAY,i);
                         calendar.set(Calendar.MINUTE,i1);
-//                            timePicker.setHour(i);
-//                            timePicker.setMinute(i1);
-                        hr = calendar.get(Calendar.HOUR_OF_DAY);
-                        mm = calendar.get(Calendar.MINUTE);
+                        epoch[0] = calendar.getTimeInMillis();
+
                     }
                 },mhour,min,false);
                 timePickerDialog.show();
+            }
+        });
+
+        start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendBroadcast();
+            }
+        });
+
+        stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+                Intent alarmIntent = new Intent(DetailActivity.this,AlarmReceiver.class);
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(DetailActivity.this,1,alarmIntent,0);
+                alarmManager.cancel(pendingIntent);
+                Toast.makeText(DetailActivity.this,"Alarm cancelled",Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -104,8 +125,6 @@ public class DetailActivity extends AppCompatActivity {
         i.putExtra("title",updatedtitle);
         i.putExtra("content",updatedcontent);
         i.putExtra("epoch",updated_epoch);
-        i.putExtra("hour",hr);
-        i.putExtra("minute",mm);
         setResult(10,i);
         finish();
 
@@ -116,8 +135,6 @@ public class DetailActivity extends AppCompatActivity {
         contentValues.put(Contract.TODO_TITLE,updatedtitle);
         contentValues.put(Contract.TODO_CONTENT,updatedcontent);
         contentValues.put(Contract.TODO_DATE,updated_epoch);
-        contentValues.put(Contract.HOUR,hr);
-        contentValues.put(Contract.MINUTE,mm);
 
         sqLiteDatabase.update(Contract.TODO_TABLE_NAME,contentValues,Contract.TODO_ID + " = ?",new String[]{todo.id + ""} );
 
@@ -145,6 +162,7 @@ public class DetailActivity extends AppCompatActivity {
                     openHelper = ExpenseOpenHelper.getInstance(getApplicationContext());
                     SQLiteDatabase db = openHelper.getWritableDatabase();
                     db.delete(Contract.TODO_TABLE_NAME, Contract.TODO_ID + " = ? ", new String[]{todo.id + ""});
+                    finish();
                 }
             });
             builder.setNegativeButton("Cancel", null);
@@ -154,4 +172,33 @@ public class DetailActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    public void sendBroadcast(){
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
+        Intent alarmIntent = new Intent(this,AlarmReceiver.class);
+        alarmIntent.putExtra("title", title.getEditableText().toString());
+        alarmIntent.putExtra("content", content.getEditableText().toString());
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,1,alarmIntent,0);
+
+        Toast.makeText(DetailActivity.this , "Alarm set", Toast.LENGTH_SHORT).show();
+        alarmManager.set(AlarmManager.RTC,
+                epoch[0],
+                pendingIntent);
+    }
+
+//    public static String getCurrentTimeStamp(){
+//        try {
+//
+//            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//            String currentDateTime = dateFormat.format(new Date()); // Find todays date
+//
+//            return currentDateTime;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//
+//            return null;
+//        }
+//    }
 }

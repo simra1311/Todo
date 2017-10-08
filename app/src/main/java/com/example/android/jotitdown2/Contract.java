@@ -11,6 +11,4 @@ public class Contract {
     public static final String TODO_CONTENT = "content";
     public static final String TODO_ID = "_id";
     public static final String TODO_DATE = "date";
-    public static final String HOUR = "hour";
-    public static final String MINUTE = "minute";
 }

@@ -29,8 +29,6 @@ public class ExpenseOpenHelper extends SQLiteOpenHelper {
                 Contract.TODO_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 Contract.TODO_TITLE + " TEXT, " +
                 Contract.TODO_DATE + " INTEGER, " +
-                Contract.HOUR + " INTEGER, " +
-                Contract.MINUTE + " INTEGER, " +
                 Contract.TODO_CONTENT + " TEXT)";
         sqLiteDatabase.execSQL(query);
     }
